@@ -5,6 +5,7 @@ import java.util.Optional;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -12,16 +13,21 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.solucionexpress.microservicios.app.cursos.models.entity.Curso;
-import com.solucionexpress.microservicios.app.cursos.models.services.CursoService;
+import com.solucionexpress.microservicios.app.cursos.services.CursoService;
 import com.solucionexpress.microservicios.commons.alumnos.models.entity.Alumno;
 import com.solucionexpress.microservicios.commons.controllers.CommonController;
 import com.solucionexpress.microservicios.commons.examenes.models.entity.Examen;
+
+import javax.validation.Valid;
 
 @RestController
 public class CursoController extends CommonController <Curso,CursoService> {
 	
 	@PutMapping("/{id}")
-	public ResponseEntity<?> editar (@RequestBody Curso curso,@PathVariable Long id){
+	public ResponseEntity<?> editar (@Valid @RequestBody Curso curso, BindingResult result, @PathVariable Long id){
+		if (result.hasErrors() ){
+			return this.validar(result);
+		}
 		Optional<Curso> o = this.service.findById(id);
 		if ( !o.isPresent()) {
 			return ResponseEntity.notFound().build();
