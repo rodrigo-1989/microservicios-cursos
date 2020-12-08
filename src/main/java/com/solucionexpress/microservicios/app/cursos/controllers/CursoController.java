@@ -2,6 +2,7 @@ package com.solucionexpress.microservicios.app.cursos.controllers;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -50,6 +51,7 @@ public class CursoController extends CommonController <Curso,CursoService> {
 		});
 		return ResponseEntity.status(HttpStatus.CREATED).body( this.service.save(dbCurso));
 	}
+
 	@PutMapping("{id}/eliminar-alumno")
 	public ResponseEntity<?>eliminarAlumnos(@RequestBody Alumno alumno,@PathVariable Long id){
 		Optional<Curso> o = this.service.findById(id);
@@ -63,7 +65,19 @@ public class CursoController extends CommonController <Curso,CursoService> {
 	
 	@GetMapping("/alumno/{id}")
 	public ResponseEntity <?> buscarPorAlumnoId(@PathVariable Long id){
-		Curso curso = service.findCursoByAlumnoId(id); 
+		Curso curso = service.findCursoByAlumnoId(id);
+
+		if (curso != null){
+			List<Long> examenesIds = (List<Long>) service.obtenerExamenesIdsConRespuestasAlumno(id);
+
+			List<Examen> examenes = curso.getExamenes().stream().map( examen ->{
+				if (examenesIds.contains(examen.getId())){
+					examen.setRespondido(true);
+				}
+				return examen;
+			}).collect(Collectors.toList());
+			curso.setExamenes(examenes);
+		}
 		
 		return ResponseEntity.ok( curso );
 	}
@@ -78,6 +92,7 @@ public class CursoController extends CommonController <Curso,CursoService> {
 		examenes.forEach( dbCurso::addExamen );
 		return ResponseEntity.status(HttpStatus.CREATED).body( this.service.save(dbCurso));
 	}
+
 	@PutMapping("{id}/eliminar-examen")
 	public ResponseEntity<?>eliminarExamen(@RequestBody Examen examen,@PathVariable Long id){
 		Optional<Curso> o = this.service.findById(id);
